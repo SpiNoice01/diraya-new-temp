@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Star, Users } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import type { Product } from "@/lib/data/products"
+import type { Product } from "@/lib/types/database"
 
 interface ProductCardProps {
   product: Product
@@ -24,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardHeader className="p-0">
         <div className="relative">
           <Image
-            src={product.image || "/placeholder.svg"}
+            src={product.image_url || "/placeholder.svg"}
             alt={product.name}
             width={400}
             height={300}

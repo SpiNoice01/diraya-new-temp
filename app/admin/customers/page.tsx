@@ -53,7 +53,7 @@ export default function AdminCustomersPage() {
             </Button>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* Customer Management */}
       <section className="py-8">
@@ -63,4 +63,4 @@ export default function AdminCustomersPage() {
       </section>
     </div>
   )
-}
+} 

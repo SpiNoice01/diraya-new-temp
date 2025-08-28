@@ -10,8 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/lib/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export function LoginForm() {
+  const { signIn } = useAuth()
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -26,18 +30,13 @@ export function LoginForm() {
     setError("")
 
     try {
-      // TODO: Implement actual authentication logic
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-
-      // Temporary mock authentication
-      if (formData.email === "admin@kateringaqiqah.com" && formData.password === "admin123") {
-        // Redirect to admin dashboard
-        window.location.href = "/admin/dashboard"
-      } else if (formData.email && formData.password) {
-        // Redirect to customer dashboard
-        window.location.href = "/customer/dashboard"
+      const { error } = await signIn(formData.email, formData.password)
+      
+      if (error) {
+        setError(error)
       } else {
-        setError("Email atau password tidak valid")
+        // Redirect based on user role (will be handled by auth context)
+        router.push("/customer/dashboard")
       }
     } catch (err) {
       setError("Terjadi kesalahan saat login. Silakan coba lagi.")
