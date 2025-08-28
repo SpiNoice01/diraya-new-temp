@@ -14,11 +14,12 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { useRouter } from "next/navigation"
 
 export function LoginForm() {
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,18 +29,27 @@ export function LoginForm() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+    setSuccess("")
+
+    console.log('Starting login process for:', formData.email)
 
     try {
       const { error } = await signIn(formData.email, formData.password)
       
       if (error) {
+        console.error('Login error:', error)
         setError(error)
       } else {
-        // Redirect based on user role (will be handled by auth context)
+        console.log('Login successful')
+        setSuccess("Login berhasil! Mengalihkan...")
+        
+        // Redirect immediately, don't wait for profile fetch
+        // Profile will be fetched in background
         router.push("/customer/dashboard")
       }
-    } catch (err) {
-      setError("Terjadi kesalahan saat login. Silakan coba lagi.")
+    } catch (err: any) {
+      console.error('Unexpected login error:', err)
+      setError(err.message || "Terjadi kesalahan saat login. Silakan coba lagi.")
     } finally {
       setIsLoading(false)
     }
@@ -63,6 +73,12 @@ export function LoginForm() {
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {success && (
+            <Alert>
+              <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
 

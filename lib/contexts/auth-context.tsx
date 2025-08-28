@@ -51,6 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Fetching user profile for ID:', userId)
       
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000) // 10 second timeout
+      })
+      
       // Check if user is authenticated
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) {
@@ -62,17 +67,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Requested user ID:', userId)
       console.log('IDs match:', session?.user?.id === userId)
       
-      const { data, error } = await supabase
+      // Race between query and timeout
+      const queryPromise = supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single()
+      
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
 
       if (error) {
         console.error('Database query error:', error)
         console.log('Error code:', error.code)
         console.log('Error message:', error.message)
         console.log('Error details:', error.details)
+        
+        // If it's a timeout or RLS issue, try without RLS check
+        if (error.message?.includes('timeout') || error.code === 'PGRST116') {
+          console.log('Trying fallback query...')
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', session?.user?.email)
+            .single()
+            
+          if (!fallbackError && fallbackData) {
+            console.log('Fallback query successful:', fallbackData)
+            setUser(fallbackData)
+            return
+          }
+        }
+        
         throw error
       }
       
@@ -80,22 +105,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data)
     } catch (error) {
       console.error('Error fetching user profile:', error)
-      setUser(null)
+      // Don't set user to null immediately, let login continue
+      console.log('Login can continue without profile, will retry later')
     }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting sign in for:', email)
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase auth signIn error:', error)
+        throw error
+      }
+
+      if (data.user) {
+        console.log('Sign in successful, user ID:', data.user.id)
+        // User profile will be fetched automatically by useEffect
+      }
 
       return { error: null }
     } catch (error: any) {
-      return { error: error.message }
+      console.error('SignIn error details:', error)
+      let errorMessage = 'Terjadi kesalahan saat login'
+      
+      if (error.message) {
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Email atau password salah'
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Email belum dikonfirmasi. Periksa inbox email Anda.'
+        } else if (error.message.includes('fetch')) {
+          errorMessage = 'Gagal terhubung ke server. Periksa koneksi internet Anda.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      return { error: errorMessage }
     }
   }
 

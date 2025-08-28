@@ -1,14 +1,28 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, Settings, User } from "lucide-react"
+import { Bell, Settings, User, LogOut, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { DashboardStats } from "@/components/customer/dashboard-stats"
 import { RecentOrders } from "@/components/customer/recent-orders"
 import { QuickActions } from "@/components/customer/quick-actions"
-import { currentCustomer } from "@/lib/data/customers"
+import { useAuth } from "@/lib/contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function CustomerDashboardPage() {
+  const { user, signOut, loading } = useAuth()
+  const router = useRouter()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/login")
+    }
+  }, [user, loading, router])
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
       year: "numeric",
@@ -16,6 +30,31 @@ export default function CustomerDashboardPage() {
       day: "numeric",
     })
   }
+
+  const handleLogout = async () => {
+    await signOut()
+    router.push("/")
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Not authenticated
+  if (!user) {
+    return null // Will redirect via useEffect
+  }
+
+  // Debug: Log user data
+  console.log('Current user data:', user)
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,10 +88,13 @@ export default function CustomerDashboardPage() {
                   <Settings className="w-4 h-4" />
                 </Link>
               </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout} title="Logout">
+                <LogOut className="w-4 h-4" />
+              </Button>
               <Avatar className="w-8 h-8">
-                <AvatarImage src={currentCustomer.avatar || "/placeholder.svg"} alt={currentCustomer.name} />
+                <AvatarImage src={user.avatar_url || "/placeholder.svg"} alt={user.name} />
                 <AvatarFallback>
-                  {currentCustomer.name
+                  {user.name
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
@@ -68,14 +110,15 @@ export default function CustomerDashboardPage() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">Selamat datang, {currentCustomer.name}!</h2>
-              <p className="text-muted-foreground">Bergabung sejak {formatDate(currentCustomer.joinedAt)}</p>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Selamat datang, {user.name}!</h2>
+              <p className="text-muted-foreground">Bergabung sejak {formatDate(user.created_at)}</p>
+              <p className="text-sm text-muted-foreground mt-1">Role: {user.role}</p>
             </div>
             <div className="hidden md:block">
               <Avatar className="w-16 h-16">
-                <AvatarImage src={currentCustomer.avatar || "/placeholder.svg"} alt={currentCustomer.name} />
+                <AvatarImage src={user.avatar_url || "/placeholder.svg"} alt={user.name} />
                 <AvatarFallback className="text-lg">
-                  {currentCustomer.name
+                  {user.name
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
@@ -90,13 +133,13 @@ export default function CustomerDashboardPage() {
       <section className="py-8">
         <div className="container mx-auto px-4 space-y-8">
           {/* Stats */}
-          <DashboardStats customerId={currentCustomer.id} />
+          <DashboardStats customerId={user.id} />
 
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Recent Orders */}
             <div className="lg:col-span-2">
-              <RecentOrders customerId={currentCustomer.id} />
+              <RecentOrders customerId={user.id} />
             </div>
 
             {/* Quick Actions */}
@@ -120,15 +163,23 @@ export default function CustomerDashboardPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-sm">{currentCustomer.email}</p>
+                  <p className="text-sm">{user.email}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Telepon</p>
-                  <p className="text-sm">{currentCustomer.phone}</p>
+                  <p className="text-sm">{user.phone}</p>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-sm font-medium text-muted-foreground">Alamat</p>
-                  <p className="text-sm">{currentCustomer.address}</p>
+                  <p className="text-sm">{user.address}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">User ID</p>
+                  <p className="text-xs font-mono text-muted-foreground">{user.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <p className="text-sm capitalize">{user.role}</p>
                 </div>
               </div>
             </CardContent>
