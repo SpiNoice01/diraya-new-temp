@@ -23,11 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        await fetchUserProfile(session.user.id)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     getInitialSession()
@@ -35,12 +40,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          await fetchUserProfile(session.user.id)
-        } else {
-          setUser(null)
+        try {
+          if (session?.user) {
+            await fetchUserProfile(session.user.id)
+          } else {
+            setUser(null)
+          }
+        } catch (error) {
+          console.error('Error in auth state change:', error)
+        } finally {
+          setLoading(false)
         }
-        setLoading(false)
       }
     )
 
@@ -49,34 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('Fetching user profile for ID:', userId)
-      
-      // Check if user is authenticated
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError) {
-        console.error('Session error:', sessionError)
-        throw sessionError
-      }
-      
-      console.log('Current session user ID:', session?.user?.id)
-      console.log('Requested user ID:', userId)
-      console.log('IDs match:', session?.user?.id === userId)
-      
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single()
 
-      if (error) {
-        console.error('Database query error:', error)
-        console.log('Error code:', error.code)
-        console.log('Error message:', error.message)
-        console.log('Error details:', error.details)
-        throw error
-      }
-      
-      console.log('User profile fetched successfully:', data)
+      if (error) throw error
       setUser(data)
     } catch (error) {
       console.error('Error fetching user profile:', error)
@@ -103,6 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Starting signUp process for email:', email)
       
+      // Test Supabase connection first
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) {
+        console.error('Session check error:', sessionError)
+        throw new Error(`Connection error: ${sessionError.message}`)
+      }
+      
+      console.log('Supabase connection OK, proceeding with signUp')
+      
       // Create user in Supabase Auth
       const { data: { user }, error } = await supabase.auth.signUp({
         email,
@@ -122,11 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .from('users')
           .insert({
             id: user.id,
-            email: user.email!,
-            name: userData.name,
-            phone: userData.phone,
-            address: userData.address,
-            role: userData.role,
+            ...userData,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
@@ -142,6 +136,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null }
     } catch (error: any) {
       console.error('SignUp error details:', error)
+      
+      // Provide more specific error messages
       let errorMessage = 'Terjadi kesalahan saat mendaftar'
       
       if (error.message) {
@@ -163,8 +159,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   const updateProfile = async (updates: Partial<AppUser>) => {

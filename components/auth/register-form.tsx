@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/lib/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -21,9 +23,13 @@ export function RegisterForm() {
     name: "",
     email: "",
     phone: "",
+    address: "",
     password: "",
     confirmPassword: "",
   })
+
+  const { signUp } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,27 +50,52 @@ export function RegisterForm() {
       return
     }
 
+    if (!formData.address.trim()) {
+      setError("Alamat harus diisi")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      // TODO: Implement actual registration logic
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      console.log('Submitting registration for:', formData.email)
+      
+      // Call signUp from auth context
+      const result = await signUp(
+        formData.email,
+        formData.password,
+        {
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          role: 'customer' as const,
+        }
+      )
 
-      setSuccess("Akun berhasil dibuat! Silakan login untuk melanjutkan.")
+      if (result.error) {
+        console.error('Registration error:', result.error)
+        setError(result.error)
+      } else {
+        console.log('Registration successful')
+        setSuccess("Akun berhasil dibuat! Silakan cek email Anda untuk verifikasi.")
 
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-      })
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          password: "",
+          confirmPassword: "",
+        })
 
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        window.location.href = "/auth/login"
-      }, 2000)
-    } catch (err) {
-      setError("Terjadi kesalahan saat mendaftar. Silakan coba lagi.")
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          router.push("/auth/login")
+        }, 3000)
+      }
+    } catch (err: any) {
+      console.error('Unexpected error:', err)
+      setError(err.message || "Terjadi kesalahan saat mendaftar. Silakan coba lagi.")
     } finally {
       setIsLoading(false)
     }
@@ -131,6 +162,19 @@ export function RegisterForm() {
               type="tel"
               placeholder="08123456789"
               value={formData.phone}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="address">Alamat Lengkap</Label>
+            <Input
+              id="address"
+              name="address"
+              type="text"
+              placeholder="Jl. Contoh No. 123, Kota, Kode Pos"
+              value={formData.address}
               onChange={handleInputChange}
               required
             />
