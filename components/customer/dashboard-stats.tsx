@@ -1,16 +1,48 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, CreditCard, Clock, CheckCircle } from "lucide-react"
-import { orders } from "@/lib/data/orders"
-import { payments } from "@/lib/data/payments"
+import { useEffect, useState } from "react"
+import { orderService, paymentService } from "@/lib/services/database"
+import type { Order, Payment } from "@/lib/types/database"
 
 interface DashboardStatsProps {
   customerId: string
 }
 
 export function DashboardStats({ customerId }: DashboardStatsProps) {
-  // Mock: Filter data for current customer
-  const customerOrders = orders.filter((order) => order.customerId === customerId)
-  const customerPayments = payments.filter((payment) => customerOrders.some((order) => order.id === payment.orderId))
+  const [orders, setOrders] = useState<Order[]>([])
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch customer orders
+        const customerOrders = await orderService.getOrdersByUserId(customerId)
+        setOrders(customerOrders)
+        
+        // Fetch payments for all customer orders
+        const orderIds = customerOrders.map(order => order.id)
+        const allPayments: Payment[] = []
+        
+        for (const orderId of orderIds) {
+          const orderPayments = await paymentService.getPaymentsByOrderId(orderId)
+          allPayments.push(...orderPayments)
+        }
+        
+        setPayments(allPayments)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (customerId) {
+      fetchData()
+    }
+  }, [customerId])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -20,32 +52,32 @@ export function DashboardStats({ customerId }: DashboardStatsProps) {
     }).format(price)
   }
 
-  const totalSpent = customerOrders.reduce((sum, order) => sum + order.totalAmount, 0)
-  const completedOrders = customerOrders.filter((order) => order.status === "completed").length
-  const pendingPayments = customerPayments.filter((payment) => payment.status === "pending").length
+  const totalSpent = orders.reduce((sum, order) => sum + order.total_amount, 0)
+  const completedOrders = orders.filter((order) => order.status === "completed").length
+  const pendingPayments = payments.filter((payment) => payment.status === "pending").length
 
   const stats = [
     {
       title: "Total Pesanan",
-      value: customerOrders.length.toString(),
+      value: loading ? "..." : orders.length.toString(),
       icon: Package,
       description: "Pesanan yang pernah dibuat",
     },
     {
       title: "Total Pengeluaran",
-      value: formatPrice(totalSpent),
+      value: loading ? "..." : formatPrice(totalSpent),
       icon: CreditCard,
       description: "Total yang telah dibelanjakan",
     },
     {
       title: "Pesanan Selesai",
-      value: completedOrders.toString(),
+      value: loading ? "..." : completedOrders.toString(),
       icon: CheckCircle,
       description: "Pesanan yang telah selesai",
     },
     {
       title: "Pembayaran Pending",
-      value: pendingPayments.toString(),
+      value: loading ? "..." : pendingPayments.toString(),
       icon: Clock,
       description: "Pembayaran yang menunggu",
     },

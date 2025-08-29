@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,20 +11,34 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Upload, User } from "lucide-react"
-import { currentCustomer } from "@/lib/data/customers"
+import { useAuth } from "@/lib/contexts/auth-context-simple"
+import { AvatarUploadSimple } from "@/components/ui/avatar-upload-simple"
 
 export function ProfileForm() {
+  const { user, updateProfile, loading } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [formData, setFormData] = useState({
-    name: currentCustomer.name,
-    email: currentCustomer.email,
-    phone: currentCustomer.phone,
-    address: currentCustomer.address,
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Initialize form data when user data is available
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+      })
+    }
+  }, [user])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextareaElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -44,16 +58,73 @@ export function ProfileForm() {
       return
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError("Format email tidak valid")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      // TODO: Implement actual profile update logic
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      // Update profile using auth context
+      const { error: updateError } = await updateProfile({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+      })
+
+      if (updateError) {
+        throw new Error(updateError)
+      }
 
       setSuccess("Profil berhasil diperbarui!")
-    } catch (err) {
-      setError("Terjadi kesalahan saat memperbarui profil. Silakan coba lagi.")
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan saat memperbarui profil. Silakan coba lagi.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    setSuccess("Foto profil berhasil diperbarui!")
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Memuat data profil...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error if no user
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Alert variant="destructive">
+          <AlertDescription>
+            Anda harus login untuk mengakses halaman profil
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
   }
 
   return (
@@ -67,23 +138,12 @@ export function ProfileForm() {
           </CardTitle>
           <CardDescription>Upload foto profil Anda untuk personalisasi akun</CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center space-x-4">
-          <Avatar className="w-20 h-20">
-            <AvatarImage src={currentCustomer.avatar || "/placeholder.svg"} alt={currentCustomer.name} />
-            <AvatarFallback className="text-lg">
-              {currentCustomer.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <Button variant="outline" size="sm">
-              <Upload className="w-4 h-4 mr-2" />
-              Ganti Foto
-            </Button>
-            <p className="text-xs text-muted-foreground mt-1">JPG, PNG maksimal 2MB</p>
-          </div>
+        <CardContent>
+          <AvatarUploadSimple
+            currentAvatarUrl={user.avatar_url}
+            userName={user.name}
+            onAvatarUpdate={handleAvatarUpdate}
+          />
         </CardContent>
       </Card>
 

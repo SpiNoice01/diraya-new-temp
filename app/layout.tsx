@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { DM_Sans } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/lib/contexts/auth-context"
+import { AuthProvider } from "@/lib/contexts/auth-context-simple"
 
 const dmSans = DM_Sans({
   subsets: ["latin"],

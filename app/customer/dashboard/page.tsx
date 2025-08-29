@@ -8,7 +8,7 @@ import Link from "next/link"
 import { DashboardStats } from "@/components/customer/dashboard-stats"
 import { RecentOrders } from "@/components/customer/recent-orders"
 import { QuickActions } from "@/components/customer/quick-actions"
-import { useAuth } from "@/lib/contexts/auth-context"
+import { useAuth } from "@/lib/contexts/auth-context-simple"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 

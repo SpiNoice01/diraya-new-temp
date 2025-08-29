@@ -3,42 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Star, Users, Clock, Shield } from "lucide-react"
 import Link from "next/link"
+import { Header } from "@/components/layout/header"
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
-            </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/katalog" className="text-muted-foreground hover:text-foreground transition-colors">
-                Katalog
-              </Link>
-              <Link href="#tentang" className="text-muted-foreground hover:text-foreground transition-colors">
-                Tentang Kami
-              </Link>
-              <Link href="#kontak" className="text-muted-foreground hover:text-foreground transition-colors">
-                Kontak
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" asChild>
-                <Link href="/auth/login">Masuk</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/auth/register">Daftar</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-background to-muted">

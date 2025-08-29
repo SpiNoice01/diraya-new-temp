@@ -2,45 +2,13 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { ProfileForm } from "@/components/customer/profile-form"
+import { Header } from "@/components/layout/header"
 
 export default function CustomerProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link
-                href="/customer/dashboard"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link href="/customer/orders" className="text-muted-foreground hover:text-foreground transition-colors">
-                Pesanan
-              </Link>
-              <Link href="/customer/profile" className="text-foreground font-medium">
-                Profil
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
-              <Link
-                href="/customer/dashboard"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Kembali ke Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-4">

@@ -30,7 +30,7 @@ export function ProductCard({ product }: ProductCardProps) {
             height={300}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          {product.isPopular && (
+          {product.is_popular && (
             <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground">
               <Star className="w-3 h-3 mr-1" />
               Populer

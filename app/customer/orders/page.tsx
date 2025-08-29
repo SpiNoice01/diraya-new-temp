@@ -1,27 +1,90 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Filter, Plus } from "lucide-react"
+import { Search, Filter, Plus, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { OrderCard } from "@/components/order/order-card"
-import { orders, orderStatuses } from "@/lib/data/orders"
+import { useAuth } from "@/lib/contexts/auth-context-simple"
+import { orderService } from "@/lib/services/database"
+import { useRouter } from "next/navigation"
+import type { Order } from "@/lib/types/database"
 
 export default function CustomerOrdersPage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
-  // Mock: Filter orders for current user
-  const userOrders = orders // In real app, filter by current user ID
+  // Order status options
+  const orderStatuses = [
+    { id: "pending", name: "Menunggu" },
+    { id: "confirmed", name: "Dikonfirmasi" },
+    { id: "preparing", name: "Disiapkan" },
+    { id: "delivered", name: "Dikirim" },
+    { id: "completed", name: "Selesai" },
+    { id: "cancelled", name: "Dibatalkan" },
+  ]
 
-  const filteredOrders = userOrders.filter((order) => {
+  // Fetch user orders
+  useEffect(() => {
+    const fetchUserOrders = async () => {
+      if (!user) return
+
+      try {
+        setLoading(true)
+        setError("")
+        
+        console.log('Fetching orders for user:', user.id)
+        const userOrders = await orderService.getOrdersByUserId(user.id)
+        setOrders(userOrders)
+        
+        console.log('User orders fetched:', userOrders.length)
+      } catch (err) {
+        console.error('Error fetching user orders:', err)
+        setError("Gagal memuat data pesanan. Silakan coba lagi.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (!authLoading && user) {
+      fetchUserOrders()
+    } else if (!authLoading && !user) {
+      // Redirect to login if not authenticated
+      router.push("/auth/login")
+    }
+  }, [user, authLoading, router])
+
+  // Filter orders based on search and status
+  const filteredOrders = orders.filter((order) => {
     const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
-    const matchesSearch =
+    const matchesSearch = searchQuery === "" || 
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.productName.toLowerCase().includes(searchQuery.toLowerCase())
+      (order as any).products?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesStatus && matchesSearch
   })
+
+  // Loading state
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Memuat pesanan...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Not authenticated
+  if (!user) {
+    return null // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,8 +99,8 @@ export default function CustomerOrdersPage() {
               <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                Beranda
+              <Link href="/customer/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                Dashboard
               </Link>
               <Link href="/katalog" className="text-muted-foreground hover:text-foreground transition-colors">
                 Katalog
@@ -68,6 +131,25 @@ export default function CustomerOrdersPage() {
           <p className="text-muted-foreground">Kelola dan pantau status pesanan katering aqiqah Anda</p>
         </div>
       </section>
+
+      {/* Error Message */}
+      {error && (
+        <section className="py-4">
+          <div className="container mx-auto px-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800">{error}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={() => window.location.reload()}
+              >
+                Coba Lagi
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Filters */}
       <section className="py-6 bg-card border-b">
@@ -142,7 +224,7 @@ export default function CustomerOrdersPage() {
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
-                <p className="text-muted-foreground">Menampilkan {filteredOrders.length} pesanan</p>
+                <p className="text-muted-foreground">Menampilkan {filteredOrders.length} dari {orders.length} pesanan</p>
                 {(searchQuery || selectedStatus !== "all") && (
                   <Button
                     variant="ghost"

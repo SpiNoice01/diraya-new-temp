@@ -4,13 +4,55 @@ import { Separator } from "@/components/ui/separator"
 import { Calendar, Clock, MapPin, Package, Phone, Mail } from "lucide-react"
 import Link from "next/link"
 import { OrderStatusBadge } from "./order-status-badge"
-import type { Order } from "@/lib/data/orders"
+import type { Order } from "@/lib/types/database"
+import { userService } from "@/lib/services/database"
+import { useEffect, useState } from "react"
 
 interface OrderCardProps {
-  order: Order
+  order: Order & {
+    products?: {
+      name: string
+      description: string
+      price: number
+      image_url: string
+    }
+    users?: {
+      id: string
+      name: string
+      email: string
+      phone: string
+      address: string
+      role: string
+      avatar_url?: string
+      created_at: string
+      updated_at: string
+    }
+  }
 }
 
 export function OrderCard({ order }: OrderCardProps) {
+  const [userData, setUserData] = useState(order.users || null)
+  const [loadingUser, setLoadingUser] = useState(false)
+
+  // Fetch user data if not available
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!order.users && order.user_id) {
+        try {
+          setLoadingUser(true)
+          const user = await userService.getUserById(order.user_id)
+          setUserData(user)
+        } catch (error) {
+          console.error('Error fetching user data:', error)
+        } finally {
+          setLoadingUser(false)
+        }
+      }
+    }
+
+    fetchUserData()
+  }, [order.users, order.user_id])
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -31,17 +73,27 @@ export function OrderCard({ order }: OrderCardProps) {
     return timeString
   }
 
+  // Get product name from joined data or fallback
+  const productName = order.products?.name || `Produk #${order.product_id}`
+  const productPrice = order.products?.price || 0
+  
+  // Get user info from joined data or fallback
+  const customerName = userData?.name || "Customer"
+  const customerEmail = userData?.email || "N/A"
+  const customerPhone = userData?.phone || "N/A"
+  const customerAddress = userData?.address || "N/A"
+
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-lg">Pesanan #{order.id}</CardTitle>
-            <p className="text-sm text-muted-foreground">Dibuat pada {formatDate(order.createdAt)}</p>
+            <p className="text-sm text-muted-foreground">Dibuat pada {formatDate(order.created_at)}</p>
           </div>
           <div className="flex flex-col gap-2 items-end">
             <OrderStatusBadge status={order.status} type="order" />
-            <OrderStatusBadge status={order.paymentStatus} type="payment" />
+            <OrderStatusBadge status={order.payment_status} type="payment" />
           </div>
         </div>
       </CardHeader>
@@ -51,11 +103,17 @@ export function OrderCard({ order }: OrderCardProps) {
         <div className="flex items-start space-x-3">
           <Package className="w-5 h-5 text-primary mt-1" />
           <div className="flex-1">
-            <h4 className="font-semibold">{order.productName}</h4>
+            <h4 className="font-semibold">{productName}</h4>
             <p className="text-sm text-muted-foreground">Jumlah: {order.quantity} paket</p>
+            {order.products?.description && (
+              <p className="text-sm text-muted-foreground mt-1">{order.products.description}</p>
+            )}
           </div>
           <div className="text-right">
-            <p className="font-bold text-primary">{formatPrice(order.totalAmount)}</p>
+            <p className="font-bold text-primary">{formatPrice(order.total_amount)}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatPrice(productPrice)} per paket
+            </p>
           </div>
         </div>
 
@@ -66,28 +124,34 @@ export function OrderCard({ order }: OrderCardProps) {
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Phone className="w-4 h-4 text-muted-foreground" />
-              <span>{order.customerPhone}</span>
+              <span className={customerPhone === "N/A" ? "text-muted-foreground" : ""}>
+                {loadingUser ? "Loading..." : customerPhone}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <Mail className="w-4 h-4 text-muted-foreground" />
-              <span>{order.customerEmail}</span>
+              <span className={customerEmail === "N/A" ? "text-muted-foreground" : ""}>
+                {loadingUser ? "Loading..." : customerEmail}
+              </span>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span>{formatDate(order.eventDate)}</span>
+              <span>{formatDate(order.event_date)}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
-              <span>{formatTime(order.eventTime)}</span>
+              <span>{formatTime(order.event_time)}</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-start space-x-2">
           <MapPin className="w-4 h-4 text-muted-foreground mt-1" />
-          <span className="text-sm">{order.customerAddress}</span>
+          <span className={`text-sm ${customerAddress === "N/A" ? "text-muted-foreground" : ""}`}>
+            {loadingUser ? "Loading..." : customerAddress}
+          </span>
         </div>
 
         {order.notes && (
@@ -104,7 +168,7 @@ export function OrderCard({ order }: OrderCardProps) {
           <Button variant="outline" size="sm" asChild>
             <Link href={`/order/${order.id}`}>Detail Pesanan</Link>
           </Button>
-          {order.paymentStatus === "pending" && (
+          {order.payment_status === "pending" && (
             <Button size="sm" asChild>
               <Link href={`/payment?order=${order.id}`}>Bayar Sekarang</Link>
             </Button>

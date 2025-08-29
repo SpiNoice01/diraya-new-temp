@@ -149,7 +149,8 @@ export const orderService = {
       .from('orders')
       .select(`
         *,
-        products:product_id(*)
+        products:product_id(*),
+        users:user_id(*)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
