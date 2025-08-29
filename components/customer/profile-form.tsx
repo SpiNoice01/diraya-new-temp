@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Loader2, Upload, User } from "lucide-react"
+import { Loader2, Upload, User, Lock } from "lucide-react"
 import { useAuth } from "@/lib/contexts/auth-context-simple"
 import { AvatarUploadSimple } from "@/components/ui/avatar-upload-simple"
+import { ChangePasswordDialog } from "@/components/customer/change-password-dialog"
 
 export function ProfileForm() {
   const { user, updateProfile, loading } = useAuth()
@@ -38,7 +39,7 @@ export function ProfileForm() {
     }
   }, [user])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextareaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -233,9 +234,14 @@ export function ProfileForm() {
           <CardDescription>Kelola keamanan dan preferensi akun Anda</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" className="w-full bg-transparent">
-            Ubah Password
-          </Button>
+          <ChangePasswordDialog
+            trigger={
+              <Button variant="outline" className="w-full bg-transparent">
+                <Lock className="w-4 h-4 mr-2" />
+                Ubah Password
+              </Button>
+            }
+          />
           <Button variant="outline" className="w-full bg-transparent">
             Pengaturan Notifikasi
           </Button>
