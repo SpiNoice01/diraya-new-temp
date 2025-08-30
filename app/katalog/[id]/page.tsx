@@ -13,6 +13,7 @@ import { productService } from "@/lib/services/database"
 import { useAuth } from "@/lib/contexts/auth-context-simple"
 import type { Product } from "@/lib/types/database"
 import { Loader2, AlertCircle, XCircle } from "lucide-react"
+import { Header } from "@/components/layout/header"
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -125,52 +126,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                Beranda
-              </Link>
-              <Link href="/katalog" className="text-foreground font-medium">
-                Katalog
-              </Link>
-              <Link href="/booking" className="text-muted-foreground hover:text-foreground transition-colors">
-                Booking
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
-              {user ? (
-                <>
-                  <Button variant="outline" asChild>
-                    <Link href="/customer/dashboard">
-                      Dashboard
-                    </Link>
-                  </Button>
-                  <Link href="/customer/profile" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Profil
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/login" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Masuk
-                  </Link>
-                  <Link href="/auth/register" className="text-primary hover:underline font-medium">
-                    Daftar
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-4">

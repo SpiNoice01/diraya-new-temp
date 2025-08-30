@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -62,21 +63,18 @@ export default function CustomerDashboardPage() {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
+            <Link href="/">
+              <Image src="/logo.png" alt="Katering Aqiqah" width={150} height={40} priority />
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
               <Link href="/customer/dashboard" className="text-foreground font-medium">
                 Dashboard
               </Link>
-              <Link href="/customer/orders" className="text-muted-foreground hover:text-foreground transition-colors">
-                Pesanan
+              <Link href="/katalog" className="text-muted-foreground hover:text-foreground transition-colors">
+                Katalog
               </Link>
-              <Link href="/customer/payments" className="text-muted-foreground hover:text-foreground transition-colors">
-                Pembayaran
+              <Link href="/customer/orders" className="text-muted-foreground hover:text-foreground transition-colors">
+                Pesanan Saya
               </Link>
             </nav>
             <div className="flex items-center space-x-3">

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image";
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,11 +39,11 @@ export default function CustomerOrdersPage() {
       try {
         setLoading(true)
         setError("")
-        
+
         console.log('Fetching orders for user:', user.id)
         const userOrders = await orderService.getOrdersByUserId(user.id)
         setOrders(userOrders)
-        
+
         console.log('User orders fetched:', userOrders.length)
       } catch (err) {
         console.error('Error fetching user orders:', err)
@@ -63,7 +64,7 @@ export default function CustomerOrdersPage() {
   // Filter orders based on search and status
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
-    const matchesSearch = searchQuery === "" || 
+    const matchesSearch = searchQuery === "" ||
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order as any).products?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesStatus && matchesSearch
@@ -92,11 +93,8 @@ export default function CustomerOrdersPage() {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
+            <Link href="/">
+              <Image src="/logo.png" alt="Katering Aqiqah" width={150} height={40} priority />
             </Link>
             <nav className="hidden md:flex items-center space-x-6">
               <Link href="/customer/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -138,9 +136,9 @@ export default function CustomerOrdersPage() {
           <div className="container mx-auto px-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-800">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="mt-2"
                 onClick={() => window.location.reload()}
               >

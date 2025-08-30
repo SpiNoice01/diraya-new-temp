@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { orders } from "@/lib/data/orders"
+import { Header } from "@/components/layout/header"
 
 interface PaymentPageProps {
   searchParams: Promise<{
@@ -28,26 +29,7 @@ export default async function PaymentPage({ searchParams }: PaymentPageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
-            </Link>
-            <div className="flex items-center space-x-3">
-              <Link href="/auth/login" className="text-muted-foreground hover:text-foreground transition-colors">
-                Masuk
-              </Link>
-              <Link href="/auth/register" className="text-primary hover:underline font-medium">
-                Daftar
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-4">

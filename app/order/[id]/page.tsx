@@ -13,6 +13,7 @@ import { orderService, productService, userService } from "@/lib/services/databa
 import { useRouter } from "next/navigation"
 import type { Order, Product, User } from "@/lib/types/database"
 import { Loader2 } from "lucide-react"
+import { Header } from "@/components/layout/header"
 
 interface OrderDetailPageProps {
   params: Promise<{
@@ -174,39 +175,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/customer/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-                Dashboard
-              </Link>
-              <Link href="/katalog" className="text-muted-foreground hover:text-foreground transition-colors">
-                Katalog
-              </Link>
-              <Link href="/customer/orders" className="text-foreground font-medium">
-                Pesanan Saya
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" asChild>
-                <Link href="/booking">
-                  Pesan Baru
-                </Link>
-              </Button>
-              <Link href="/customer/profile" className="text-muted-foreground hover:text-foreground transition-colors">
-                Profil
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-4">
