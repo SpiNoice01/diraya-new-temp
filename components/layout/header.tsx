@@ -1,5 +1,5 @@
 "use client"
-
+import Image from "next/image";
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -37,13 +37,9 @@ export function Header() {
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">K</span>
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Katering Aqiqah</h1>
-          </Link>
-          
+            <Link href="/">
+              <Image src="/logo.png" alt="Katering Aqiqah" width={150} height={40} priority />
+            </Link>
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/katalog" className="text-muted-foreground hover:text-foreground transition-colors">
               Katalog
@@ -80,7 +76,7 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  
+
                   {user.role === 'admin' ? (
                     // Admin menu items
                     <>
@@ -116,16 +112,16 @@ export function Header() {
                       <DropdownMenuSeparator />
                     </>
                   )}
-                  
+
                   <DropdownMenuItem asChild>
                     <Link href="/customer/profile" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Pengaturan</span>
                     </Link>
                   </DropdownMenuItem>
-                  
+
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleSignOut}
                     className="flex items-center text-red-600 focus:text-red-600"
                   >

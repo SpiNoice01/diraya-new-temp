@@ -2,12 +2,14 @@ import { BookingForm } from "@/components/booking/booking-form"
 import Link from "next/link"
 
 interface BookingPageProps {
-  searchParams: {
+  searchParams: Promise<{
     product?: string
-  }
+  }>
 }
 
-export default function BookingPage({ searchParams }: BookingPageProps) {
+export default async function BookingPage({ searchParams }: BookingPageProps) {
+  const params = await searchParams
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -68,7 +70,7 @@ export default function BookingPage({ searchParams }: BookingPageProps) {
       {/* Booking Form */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <BookingForm productId={searchParams.product} />
+          <BookingForm productId={params.product} />
         </div>
       </section>
     </div>

@@ -6,13 +6,14 @@ import Link from "next/link"
 import { orders } from "@/lib/data/orders"
 
 interface PaymentPageProps {
-  searchParams: {
+  searchParams: Promise<{
     order?: string
-  }
+  }>
 }
 
-export default function PaymentPage({ searchParams }: PaymentPageProps) {
-  const orderId = searchParams.order
+export default async function PaymentPage({ searchParams }: PaymentPageProps) {
+  const params = await searchParams
+  const orderId = params.order
 
   if (!orderId) {
     redirect("/customer/orders")

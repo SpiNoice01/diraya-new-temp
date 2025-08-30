@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, Users, Clock, Shield } from "lucide-react"
@@ -122,10 +123,9 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">K</span>
-                </div>
-                <h4 className="font-bold text-foreground">Katering Aqiqah</h4>
+                <Link href="/">
+                  <Image src="/logo.png" alt="Katering Aqiqah" width={150} height={40} priority />
+                </Link>
               </div>
               <p className="text-muted-foreground">
                 Layanan katering aqiqah terpercaya dengan kualitas terbaik dan pelayanan profesional.
