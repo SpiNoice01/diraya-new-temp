@@ -44,10 +44,10 @@ export function Header() {
             <Link href="/katalog" className="text-muted-foreground hover:text-foreground transition-colors">
               Katalog
             </Link>
-            <Link href="#tentang" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/tentang" className="text-muted-foreground hover:text-foreground transition-colors">
               Tentang Kami
             </Link>
-            <Link href="#kontak" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/kontak" className="text-muted-foreground hover:text-foreground transition-colors">
               Kontak
             </Link>
           </nav>
