@@ -1,9 +1,40 @@
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { TrendingUp, TrendingDown, Loader2 } from "lucide-react"
 import { Package, CreditCard, Users, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { adminStats } from "@/lib/data/admin"
+import { adminService } from "@/lib/services/database"
 
 export function AdminStats() {
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+        setError("")
+        const data = await adminService.getDashboardStats()
+        setStats(data)
+      } catch (err) {
+        console.error('Error fetching admin stats:', err)
+        setError("Gagal memuat statistik")
+        // Fallback to default stats
+        setStats({
+          totalOrders: 0,
+          totalRevenue: 0,
+          totalCustomers: 0,
+          pendingOrders: 0,
+          completedOrders: 0,
+          cancelledOrders: 0
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -12,54 +43,82 @@ export function AdminStats() {
     }).format(price)
   }
 
-  const stats = [
+  if (loading) {
+    return (
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array(6).fill(0).map((_, index) => (
+          <Card key={index}>
+            <CardContent className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (!stats) {
+    return (
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="col-span-full">
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <p className="text-red-600 mb-2">{error || "Gagal memuat statistik"}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const statsArray = [
     {
       title: "Total Pesanan",
-      value: adminStats.totalOrders.toString(),
+      value: stats.totalOrders?.toString() || "0",
       icon: Package,
-      description: `+${adminStats.monthlyOrders} bulan ini`,
+      description: "Total pesanan",
       trend: "up" as const,
     },
     {
       title: "Total Pendapatan",
-      value: formatPrice(adminStats.totalRevenue),
+      value: formatPrice(stats.totalRevenue || 0),
       icon: CreditCard,
-      description: `${formatPrice(adminStats.monthlyRevenue)} bulan ini`,
+      description: "Total pendapatan",
       trend: "up" as const,
     },
     {
       title: "Total Customer",
-      value: adminStats.totalCustomers.toString(),
+      value: stats.totalCustomers?.toString() || "0",
       icon: Users,
       description: "Customer terdaftar",
       trend: "up" as const,
     },
     {
       title: "Pesanan Pending",
-      value: adminStats.pendingOrders.toString(),
+      value: stats.pendingOrders?.toString() || "0",
       icon: Clock,
       description: "Menunggu konfirmasi",
       trend: "neutral" as const,
     },
     {
-      title: "Pembayaran Pending",
-      value: adminStats.pendingPayments.toString(),
-      icon: AlertCircle,
-      description: "Menunggu verifikasi",
-      trend: "neutral" as const,
-    },
-    {
       title: "Pesanan Selesai",
-      value: adminStats.completedOrders.toString(),
+      value: stats.completedOrders?.toString() || "0",
       icon: CheckCircle,
       description: "Total selesai",
       trend: "up" as const,
+    },
+    {
+      title: "Pesanan Dibatalkan",
+      value: stats.cancelledOrders?.toString() || "0",
+      icon: AlertCircle,
+      description: "Total dibatalkan",
+      trend: "neutral" as const,
     },
   ]
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {stats.map((stat, index) => (
+      {statsArray.map((stat, index) => (
         <Card key={index}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>

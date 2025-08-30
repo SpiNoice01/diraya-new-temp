@@ -149,8 +149,8 @@ export const orderService = {
       .from('orders')
       .select(`
         *,
-        products:product_id(*),
-        users:user_id(*)
+        products:product_id(id, name, description, price, category),
+        users:user_id(id, name, email, phone, address)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -164,8 +164,8 @@ export const orderService = {
       .from('orders')
       .select(`
         *,
-        users:user_id(*),
-        products:product_id(*)
+        users:user_id(id, name, email, phone, address),
+        products:product_id(id, name, description, price, category)
       `)
       .order('created_at', { ascending: false })
     
@@ -178,8 +178,8 @@ export const orderService = {
       .from('orders')
       .select(`
         *,
-        users:user_id(*),
-        products:product_id(*)
+        users:user_id(id, name, email, phone, address),
+        products:product_id(id, name, description, price, category)
       `)
       .eq('id', id)
       .single()
@@ -244,6 +244,16 @@ export const paymentService = {
       .eq('id', id)
       .select()
       .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async getAllPayments() {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .order('created_at', { ascending: false })
     
     if (error) throw error
     return data

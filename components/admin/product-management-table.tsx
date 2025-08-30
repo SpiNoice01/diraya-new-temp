@@ -1,17 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Eye, Edit, Trash2, Plus } from "lucide-react"
+import { Eye, Edit, Trash2, Plus, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { products } from "@/lib/data/products"
+import { productService } from "@/lib/services/database"
+import type { Product } from "@/lib/types/database"
 
 export function ProductManagementTable() {
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  // Fetch products from database
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        setError("")
+        const data = await productService.getAllProducts()
+        setProducts(data || [])
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        setError("Gagal memuat data produk")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
 
   const filteredProducts = products.filter((product) => categoryFilter === "all" || product.category === categoryFilter)
 

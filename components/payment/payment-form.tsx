@@ -14,11 +14,42 @@ import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Upload, Copy, Check, CreditCard, Building, Loader2, AlertCircle } from "lucide-react"
 import Image from "next/image"
-import { bankAccounts, paymentStatuses } from "@/lib/data/payments"
-import type { Order } from "@/lib/data/orders"
+import type { Order } from "@/lib/types/database"
+
+// Bank accounts for manual transfer
+const bankAccounts = [
+  {
+    id: "bca",
+    bankName: "Bank BCA",
+    accountNumber: "1234567890",
+    accountName: "PT Katering Aqiqah",
+  },
+  {
+    id: "mandiri",
+    bankName: "Bank Mandiri",
+    accountNumber: "9876543210",
+    accountName: "PT Katering Aqiqah",
+  },
+  {
+    id: "bni",
+    bankName: "Bank BNI",
+    accountNumber: "5555666677",
+    accountName: "PT Katering Aqiqah",
+  }
+]
 
 interface PaymentFormProps {
-  order: Order
+  order: Order & {
+    products?: {
+      name: string
+      description: string
+      price: number
+    }
+    users?: {
+      name: string
+      email: string
+    }
+  }
 }
 
 export function PaymentForm({ order }: PaymentFormProps) {

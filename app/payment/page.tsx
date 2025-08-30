@@ -3,8 +3,8 @@ import { PaymentForm } from "@/components/payment/payment-form"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { orders } from "@/lib/data/orders"
 import { Header } from "@/components/layout/header"
+import { orderService } from "@/lib/services/database"
 
 interface PaymentPageProps {
   searchParams: Promise<{
@@ -20,7 +20,13 @@ export default async function PaymentPage({ searchParams }: PaymentPageProps) {
     redirect("/customer/orders")
   }
 
-  const order = orders.find((o) => o.id === orderId)
+  let order
+  try {
+    order = await orderService.getOrderById(orderId)
+  } catch (error) {
+    console.error('Order not found:', error)
+    redirect("/customer/orders")
+  }
 
   if (!order) {
     redirect("/customer/orders")

@@ -1,12 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Calendar, Clock, MapPin, Package, Phone, Mail } from "lucide-react"
+import { Calendar, Clock, MapPin, Package, Phone, Mail, CreditCard } from "lucide-react"
 import Link from "next/link"
 import { OrderStatusBadge } from "./order-status-badge"
 import type { Order } from "@/lib/types/database"
 import { userService } from "@/lib/services/database"
 import { useEffect, useState } from "react"
+import { MidtransPayment } from "@/components/payment/midtrans-payment"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
 
 interface OrderCardProps {
   order: Order & {
@@ -33,6 +36,8 @@ interface OrderCardProps {
 export function OrderCard({ order }: OrderCardProps) {
   const [userData, setUserData] = useState(order.users || null)
   const [loadingUser, setLoadingUser] = useState(false)
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+  const router = useRouter()
 
   // Fetch user data if not available
   useEffect(() => {
@@ -82,6 +87,31 @@ export function OrderCard({ order }: OrderCardProps) {
   const customerEmail = userData?.email || "N/A"
   const customerPhone = userData?.phone || "N/A"
   const customerAddress = userData?.address || "N/A"
+
+  // Payment handlers
+  const handlePaymentSuccess = (result: any) => {
+    console.log('✅ Payment successful:', result)
+    setShowPaymentDialog(false)
+    // Refresh the page to show updated status
+    window.location.reload()
+  }
+
+  const handlePaymentPending = (result: any) => {
+    console.log('⏳ Payment pending:', result)
+    setShowPaymentDialog(false)
+    router.push(`/payment/pending?order=${order.id}`)
+  }
+
+  const handlePaymentError = (result: any) => {
+    console.error('❌ Payment error:', result)
+    setShowPaymentDialog(false)
+    router.push(`/payment/error?order=${order.id}`)
+  }
+
+  const handlePaymentClose = () => {
+    console.log('🚪 Payment dialog closed')
+    setShowPaymentDialog(false)
+  }
 
   return (
     <Card>
@@ -169,9 +199,29 @@ export function OrderCard({ order }: OrderCardProps) {
             <Link href={`/order/${order.id}`}>Detail Pesanan</Link>
           </Button>
           {order.payment_status === "pending" && (
-            <Button size="sm" asChild>
-              <Link href={`/payment?order=${order.id}`}>Bayar Sekarang</Link>
-            </Button>
+            <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Bayar Sekarang
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Pembayaran Pesanan #{order.id}</DialogTitle>
+                </DialogHeader>
+                <MidtransPayment
+                  orderId={order.id}
+                  amount={order.total_amount}
+                  customerName={customerName}
+                  productName={productName}
+                  onSuccess={handlePaymentSuccess}
+                  onPending={handlePaymentPending}
+                  onError={handlePaymentError}
+                  onClose={handlePaymentClose}
+                />
+              </DialogContent>
+            </Dialog>
           )}
           {order.status === "pending" && (
             <Button variant="destructive" size="sm">

@@ -18,25 +18,46 @@ export default function KatalogPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  // Categories based on your database data
   const categories = [
     { id: "all", name: "Semua Paket", icon: "🍽️" },
-    { id: "ekonomis", name: "Ekonomis", icon: "💰" },
-    { id: "standar", name: "Standar", icon: "⭐" },
-    { id: "premium", name: "Premium", icon: "👑" },
-    { id: "deluxe", name: "Deluxe", icon: "💎" },
-    { id: "spesial", name: "Spesial", icon: "🎉" },
+    { id: "ekoi", name: "Ekonomis", icon: "💰" },
+    { id: "stan", name: "Standar", icon: "⭐" },
+    { id: "prer", name: "Premium", icon: "👑" },
+    { id: "delu", name: "Deluxe", icon: "💎" },
+    { id: "spes", name: "Spesial", icon: "🎉" },
   ]
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const data = await productService.getAllProducts()
-        setProducts(data)
         setError("")
+        
+        // Fetch products from Supabase database
+        const data = await productService.getAllProducts()
+        setProducts(data || [])
+        
+        // If no products found, show empty state
+        if (!data || data.length === 0) {
+          setError("Belum ada paket katering yang tersedia. Silakan cek kembali nanti.")
+        }
       } catch (err) {
         console.error("Failed to fetch products:", err)
-        setError("Gagal memuat data produk. Silakan refresh halaman.")
+        
+        // Check if it's a network/connection error
+        if (err instanceof Error) {
+          if (err.message.includes('fetch') || err.message.includes('network')) {
+            setError("Gagal terhubung ke database. Pastikan koneksi internet Anda stabil.")
+          } else if (err.message.includes('Supabase') || err.message.includes('configuration')) {
+            setError("Database belum dikonfigurasi. Silakan hubungi administrator.")
+          } else {
+            setError("Gagal memuat data produk. Silakan refresh halaman.")
+          }
+        } else {
+          setError("Terjadi kesalahan yang tidak diketahui. Silakan coba lagi.")
+        }
+        
         setProducts([])
       } finally {
         setLoading(false)
@@ -53,6 +74,13 @@ export default function KatalogPage() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
+
+  // Get categories that have products (but always show all categories)
+  const categoriesWithProducts = categories.map(cat => ({
+    ...cat,
+    hasProducts: cat.id === "all" || products.some(product => product.category === cat.id),
+    productCount: cat.id === "all" ? products.length : products.filter(p => p.category === cat.id).length
+  }))
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
@@ -115,14 +143,14 @@ export default function KatalogPage() {
               />
             </div>
 
-            {/* Enhanced Category Filter */}
+            {/* Enhanced Category Filter - Show all categories */}
             <div className="flex items-center gap-3 flex-wrap justify-center">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Filter className="w-4 h-4" />
                 <span>Kategori:</span>
               </div>
               <div className="flex gap-2 flex-wrap">
-                {categories.map((category) => (
+                {categoriesWithProducts.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "outline"}
@@ -132,10 +160,16 @@ export default function KatalogPage() {
                       selectedCategory === category.id 
                         ? 'bg-gradient-to-r from-primary to-primary/90 shadow-lg' 
                         : 'hover:bg-primary/10 hover:border-primary/50'
-                    }`}
+                    } ${!category.hasProducts ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!category.hasProducts}
                   >
                     <span className="mr-2">{category.icon}</span>
                     {category.name}
+                    {category.id !== "all" && category.hasProducts && (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        {category.productCount}
+                      </Badge>
+                    )}
                   </Button>
                 ))}
               </div>
@@ -151,20 +185,29 @@ export default function KatalogPage() {
             <div className="text-center py-16">
               <div className="inline-flex items-center gap-3 px-6 py-4 bg-card rounded-full shadow-lg">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-lg font-medium">Memuat produk...</span>
+                <span className="text-lg font-medium">Memuat produk dari database...</span>
               </div>
             </div>
           ) : error ? (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto p-6 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-600 text-lg mb-4">{error}</p>
-                <Button
-                  variant="outline"
-                  onClick={() => window.location.reload()}
-                  className="border-red-300 text-red-600 hover:bg-red-50"
-                >
-                  Coba Lagi
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                    className="border-red-300 text-red-600 hover:bg-red-50"
+                  >
+                    Coba Lagi
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/kontak'}
+                    className="border-primary text-primary hover:bg-primary/10"
+                  >
+                    Hubungi Admin
+                  </Button>
+                </div>
               </div>
             </div>
           ) : filteredProducts.length === 0 ? (
@@ -175,18 +218,32 @@ export default function KatalogPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">Tidak ada paket yang ditemukan</h3>
                 <p className="text-muted-foreground mb-6">
-                  Tidak ada paket yang sesuai dengan pencarian Anda.
+                  {searchQuery || selectedCategory !== "all" 
+                    ? "Tidak ada paket yang sesuai dengan pencarian Anda."
+                    : "Belum ada paket katering yang tersedia saat ini."
+                  }
                 </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("")
-                    setSelectedCategory("all")
-                  }}
-                  className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
-                >
-                  Reset Filter
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  {(searchQuery || selectedCategory !== "all") && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("")
+                        setSelectedCategory("all")
+                      }}
+                      className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
+                    >
+                      Reset Filter
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/kontak'}
+                    className="border-primary text-primary hover:bg-primary/10"
+                  >
+                    Hubungi Kami
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

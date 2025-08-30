@@ -5,8 +5,13 @@ import { Separator } from "@/components/ui/separator"
 import { CreditCard, Building, FileImage, Clock } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { paymentStatuses } from "@/lib/data/payments"
-import type { Payment } from "@/lib/data/payments"
+import type { Payment } from "@/lib/types/database"
+
+const paymentStatuses = [
+  { id: "pending", name: "Menunggu", color: "bg-yellow-100 text-yellow-800" },
+  { id: "completed", name: "Selesai", color: "bg-green-100 text-green-800" },
+  { id: "failed", name: "Gagal", color: "bg-red-100 text-red-800" },
+]
 
 interface PaymentStatusCardProps {
   payment: Payment

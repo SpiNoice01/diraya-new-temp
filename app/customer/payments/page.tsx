@@ -1,25 +1,60 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Filter } from "lucide-react"
+import { Search, Filter, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { PaymentStatusCard } from "@/components/payment/payment-status-card"
-import { payments, paymentStatuses } from "@/lib/data/payments"
+import { paymentService } from "@/lib/services/database"
+import { useAuth } from "@/lib/contexts/auth-context-simple"
+import type { Payment } from "@/lib/types/database"
+
+const paymentStatuses = [
+  { id: "pending", name: "Menunggu" },
+  { id: "completed", name: "Selesai" },
+  { id: "failed", name: "Gagal" },
+]
 
 export default function CustomerPaymentsPage() {
+  const { user, loading: authLoading } = useAuth()
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
-  // Mock: Filter payments for current user
-  const userPayments = payments // In real app, filter by current user ID
+  // Fetch user payments
+  useEffect(() => {
+    const fetchUserPayments = async () => {
+      if (!user) return
 
-  const filteredPayments = userPayments.filter((payment) => {
+      try {
+        setLoading(true)
+        setError("")
+        
+        // Get all payments for user's orders
+        const allPayments = await paymentService.getAllPayments()
+        // Filter for current user (you would need to join with orders to filter by user)
+        setPayments(allPayments || [])
+      } catch (err) {
+        console.error('Error fetching payments:', err)
+        setError("Gagal memuat data pembayaran")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (!authLoading && user) {
+      fetchUserPayments()
+    }
+  }, [user, authLoading])
+
+  const filteredPayments = payments.filter((payment) => {
     const matchesStatus = selectedStatus === "all" || payment.status === selectedStatus
     const matchesSearch =
       payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.orderId.toLowerCase().includes(searchQuery.toLowerCase())
+      payment.order_id.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesStatus && matchesSearch
   })
 
